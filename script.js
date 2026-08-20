@@ -112,9 +112,11 @@ function renderHeatmap(container, dates) {
   today.setHours(0, 0, 0, 0);
   const todayDow = today.getDay();
   const start = new Date(today);
-  start.setDate(start.getDate() - (totalDays - 1) - todayDow);
+  // Arrancamos en el domingo de hace WEEKS_TO_SHOW-1 semanas: así cada columna
+  // es una semana completa y cada fila un día fijo, igual que getDay().
+  start.setDate(start.getDate() - todayDow - (WEEKS_TO_SHOW - 1) * 7);
 
-  for (let i = 0; i < totalDays + todayDow + 1; i++) {
+  for (let i = 0; i < totalDays; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     const cell = document.createElement("div");
