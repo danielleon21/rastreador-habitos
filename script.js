@@ -250,7 +250,11 @@ function openGoalModal(mode, habitId, name) {
   modalHabitNameEl.textContent = modalPendingName;
   updateGoalSelectorUI();
   modalEl.classList.remove("hidden");
-  modalSaveBtn.focus();
+  // No enfocamos Guardar: si el modal se abrió con Enter, la repetición de esa
+  // misma tecla cae sobre el botón ya enfocado y confirma sin que el modal
+  // llegue a verse. Enfocamos el día seleccionado, donde activar es idempotente.
+  const diaSeleccionado = goalSelectorEl.querySelector(".goal-day.selected");
+  (diaSeleccionado || goalSelectorEl.firstElementChild).focus();
 }
 
 function closeGoalModal() {
