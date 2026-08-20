@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastreador de Hábitos</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>🌱 Mis Hábitos</h1>
+      <p class="subtitle">Constancia día a día</p>
+    </header>
+
+    <section class="add-habit">
+      <input type="text" id="habit-input" placeholder="Nuevo hábito, ej. Leer 10 páginas" maxlength="40">
+      <button id="add-btn">Agregar</button>
+    </section>
+
+    <section class="search-bar">
+      <span class="search-icon" aria-hidden="true">🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar hábito..." autocomplete="off" aria-label="Buscar hábito">
+      <button id="clear-search" class="clear-search hidden" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✕</button>
+    </section>
+
+    <section id="habits-list" class="habits-list"></section>
+
+    <p id="no-results" class="no-results hidden">Ningún hábito coincide con <span id="no-results-query"></span> 🔍</p>
+
+    <p id="empty-state" class="empty-state">Todavía no tienes hábitos. ¡Agrega el primero! 👆</p>
+  </div>
+
+  <template id="habit-template">
+    <article class="habit-card">
+      <div class="habit-top">
+        <div class="habit-info">
+          <h2 class="habit-name"></h2>
+          <div class="habit-stats">
+            <span class="streak">🔥 <span class="streak-count">0</span> días</span>
+            <span class="best">🏆 mejor: <span class="best-count">0</span></span>
+            <button class="weekly-goal-btn" title="Editar objetivo semanal">
+              🎯 <span class="weekly-progress">0</span>/<span class="weekly-goal-value">0</span> esta semana
+            </button>
+          </div>
+        </div>
+        <div class="habit-actions">
+          <button class="today-btn" title="Marcar hoy">✓</button>
+          <button class="delete-btn" title="Eliminar hábito">✕</button>
+        </div>
+      </div>
+      <div class="heatmap"></div>
+    </article>
+  </template>
+
+  <div id="goal-modal" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Objetivo semanal</h2>
+      <p class="modal-habit-name" id="modal-habit-name"></p>
+      <p class="modal-desc">¿Cuántos días por semana querés cumplir este hábito?</p>
+      <div class="goal-selector" id="goal-selector">
+        <button type="button" class="goal-day" data-value="1">1</button>
+        <button type="button" class="goal-day" data-value="2">2</button>
+        <button type="button" class="goal-day" data-value="3">3</button>
+        <button type="button" class="goal-day" data-value="4">4</button>
+        <button type="button" class="goal-day" data-value="5">5</button>
+        <button type="button" class="goal-day" data-value="6">6</button>
+        <button type="button" class="goal-day" data-value="7">7</button>
+      </div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn-secondary">Cancelar</button>
+        <button id="modal-save" class="btn-primary">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
