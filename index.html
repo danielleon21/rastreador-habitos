@@ -29,6 +29,13 @@
     <p id="no-results" class="no-results hidden">Ningún hábito coincide con <span id="no-results-query"></span> 🔍</p>
 
     <p id="empty-state" class="empty-state">Todavía no tienes hábitos. ¡Agrega el primero! 👆</p>
+
+    <footer class="data-io">
+      <button id="export-btn" class="btn-secondary">⬇️ Exportar copia</button>
+      <button id="import-btn" class="btn-secondary">⬆️ Importar copia</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+      <p id="io-status" class="io-status" role="status" aria-live="polite"></p>
+    </footer>
   </div>
 
   <template id="habit-template">
