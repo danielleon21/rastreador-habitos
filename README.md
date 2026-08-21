@@ -13,6 +13,7 @@ Aplicación web para llevar el registro diario de hábitos: rachas, objetivo sem
 - **Mapa de calor**: las últimas 18 semanas completas de actividad, con la fecha en el tooltip de cada celda.
 - **Búsqueda tolerante**: ignora mayúsculas y acentos, y acepta subsecuencias — escribir `crr` encuentra `Correr`. Los resultados se ordenan por relevancia y la coincidencia se resalta en el nombre.
 - **Tema claro y oscuro**: se adapta automáticamente al tema del sistema.
+- **Copias de seguridad**: exportá todos tus hábitos a un archivo JSON e importalos en otro navegador o dispositivo.
 
 ### Atajos de teclado
 
@@ -40,6 +41,12 @@ Si preferís Python, `python -m http.server 8000` hace lo mismo. En cualquier ca
 ## Almacenamiento de datos
 
 Todo vive en el navegador: los hábitos se guardan en `localStorage` bajo la clave `habit-tracker-data`. No hay servidor ni cuentas, así que los datos no se sincronizan entre navegadores ni dispositivos, y borrar los datos del sitio los elimina.
+
+### Exportar e importar
+
+Los botones al pie de la página bajan un archivo `rastreador-habitos-AAAA-MM-DD.json` con todo tu historial, y lo vuelven a cargar en cualquier navegador. Es la forma de tener un respaldo y de pasar los datos de un dispositivo a otro.
+
+**Importar reemplaza, no fusiona**: los hábitos que haya en ese navegador se pierden y se quedan solo los del archivo. La app te pide confirmación antes. Fusionar dos historiales que cambiaron por separado es un problema bastante más difícil y corresponde a una sincronización real, no a un archivo que se carga a mano.
 
 ## Estructura del proyecto
 

@@ -1,6 +1,9 @@
 const STORAGE_KEY = "habit-tracker-data";
 const WEEKS_TO_SHOW = 18;
 const DEFAULT_WEEKLY_GOAL = 5;
+const EXPORT_VERSION = 1;
+const IO_STATUS_MS = 5000;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const appEl = document.querySelector(".app");
 const listEl = document.getElementById("habits-list");
@@ -18,6 +21,11 @@ const modalHabitNameEl = document.getElementById("modal-habit-name");
 const goalSelectorEl = document.getElementById("goal-selector");
 const modalCancelBtn = document.getElementById("modal-cancel");
 const modalSaveBtn = document.getElementById("modal-save");
+
+const exportBtn = document.getElementById("export-btn");
+const importBtn = document.getElementById("import-btn");
+const importFileEl = document.getElementById("import-file");
+const ioStatusEl = document.getElementById("io-status");
 
 let habits = loadHabits();
 let searchQuery = "";
@@ -311,6 +319,122 @@ function deleteHabit(id) {
   renderHabits();
 }
 
+function plural(n, uno, muchos) {
+  return `${n} ${n === 1 ? uno : muchos}`;
+}
+
+let ioStatusTimer = null;
+
+function showIOStatus(message, isError = false) {
+  ioStatusEl.textContent = message;
+  ioStatusEl.classList.toggle("error", isError);
+  clearTimeout(ioStatusTimer);
+  ioStatusTimer = setTimeout(() => {
+    ioStatusEl.textContent = "";
+    ioStatusEl.classList.remove("error");
+  }, IO_STATUS_MS);
+}
+
+function exportData() {
+  if (!habits.length) {
+    showIOStatus("No hay hábitos para exportar.", true);
+    return;
+  }
+
+  const payload = {
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    habits: habits.map((h) => ({
+      id: h.id,
+      name: h.name,
+      weeklyGoal: h.weeklyGoal,
+      dates: Array.from(h.dates).sort(),
+    })),
+  };
+
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `rastreador-habitos-${todayISO()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  showIOStatus(`Copia exportada: ${plural(habits.length, "hábito", "hábitos")}.`);
+}
+
+// Acepta el archivo exportado ({ version, habits }) y también un array pelado,
+// que es la forma en que los datos viven en localStorage. Descarta las entradas
+// que no pueda usar en vez de rechazar el archivo entero.
+function parseImport(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("El archivo no es JSON válido.");
+  }
+
+  const entries = Array.isArray(parsed) ? parsed : parsed?.habits;
+  if (!Array.isArray(entries)) throw new Error("El archivo no tiene una lista de hábitos.");
+
+  const ids = new Set();
+  const imported = [];
+
+  for (const entry of entries) {
+    const name = typeof entry?.name === "string" ? entry.name.trim() : "";
+    if (!name) continue;
+
+    // Un id repetido haría que borrar un hábito se llevara puesto al otro.
+    const id = typeof entry.id === "string" && entry.id && !ids.has(entry.id) ? entry.id : crypto.randomUUID();
+    ids.add(id);
+
+    const goal = Number(entry.weeklyGoal);
+    const dates = Array.isArray(entry.dates) ? entry.dates.filter((d) => typeof d === "string" && ISO_DATE.test(d)) : [];
+
+    imported.push({
+      id,
+      name,
+      dates: new Set(dates),
+      weeklyGoal: Number.isInteger(goal) && goal >= 1 && goal <= 7 ? goal : DEFAULT_WEEKLY_GOAL,
+    });
+  }
+
+  if (!imported.length) throw new Error("El archivo no contiene ningún hábito utilizable.");
+  return { imported, descartados: entries.length - imported.length };
+}
+
+async function importData(file) {
+  let result;
+  try {
+    result = parseImport(await file.text());
+  } catch (err) {
+    showIOStatus(err.message, true);
+    return;
+  }
+
+  const { imported, descartados } = result;
+
+  // Importar reemplaza: fusionar los dos lados es el problema difícil y le
+  // corresponde a la sincronización, no a un archivo que cargás a mano.
+  if (habits.length) {
+    const confirmado = confirm(
+      `Vas a reemplazar ${plural(habits.length, "hábito", "hábitos")} por ${plural(imported.length, "hábito", "hábitos")} del archivo.\n\n` +
+        "Lo que hay ahora en este navegador se pierde y no se puede recuperar."
+    );
+    if (!confirmado) {
+      showIOStatus("Importación cancelada. No se cambió nada.");
+      return;
+    }
+  }
+
+  habits = imported;
+  clearSearch();
+  saveHabits();
+  renderHabits();
+
+  const aviso = descartados ? ` Se descartaron ${plural(descartados, "entrada inválida", "entradas inválidas")}.` : "";
+  showIOStatus(`Importados ${plural(imported.length, "hábito", "hábitos")}.${aviso}`);
+}
+
 addBtn.addEventListener("click", requestAddHabit);
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") requestAddHabit();
@@ -351,6 +475,15 @@ document.addEventListener("keydown", (e) => {
   } else if (searchQuery) {
     clearSearch();
   }
+});
+
+exportBtn.addEventListener("click", exportData);
+importBtn.addEventListener("click", () => importFileEl.click());
+importFileEl.addEventListener("change", () => {
+  const file = importFileEl.files[0];
+  if (file) importData(file);
+  // Sin esto, volver a elegir el mismo archivo no dispara "change".
+  importFileEl.value = "";
 });
 
 renderHabits();
